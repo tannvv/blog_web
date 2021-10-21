@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Identity.UI.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.Extensions.Logging;
+using System.ComponentModel;
 
 namespace blog_web.Areas.Identity.Pages.Account
 {
@@ -44,8 +45,8 @@ namespace blog_web.Areas.Identity.Pages.Account
         public class InputModel
         {
             [Required]
-            [EmailAddress]
-            public string Email { get; set; }
+            [DisplayName("Email or user name")]
+            public string UserNameOrEmail { get; set; }
 
             [Required]
             [DataType(DataType.Password)]
@@ -82,7 +83,17 @@ namespace blog_web.Areas.Identity.Pages.Account
             {
                 // This doesn't count login failures towards account lockout
                 // To enable password failures to trigger account lockout, set lockoutOnFailure: true
-                var result = await _signInManager.PasswordSignInAsync(Input.Email, Input.Password, Input.RememberMe, lockoutOnFailure: false);
+                var result = await _signInManager.PasswordSignInAsync(Input.UserNameOrEmail, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+
+                if (!result.Succeeded)
+                {
+                    var user = await _userManager.FindByEmailAsync(Input.UserNameOrEmail);
+                    if (user!= null)
+                    {
+                        result = await _signInManager.PasswordSignInAsync(user.UserName, Input.Password, Input.RememberMe, lockoutOnFailure: true);
+                    }
+                }
+
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User logged in.");
