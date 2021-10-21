@@ -1,0 +1,63 @@
+@page
+@model blog_web.Pages_Blog.IndexModel
+
+@{
+    ViewData["Title"] = "Index";
+    int stt = 0;
+}
+
+@{
+    PagingModel pagingModel = new PagingModel{
+        CurrentPage = Model.CurrentPage,
+        CountPage = Model.CountPage,
+        GenerateUrl = (int? p) => Url.Page("/Blog/Index", new{p = p})
+    };
+}
+
+<h1>Index</h1>
+
+<partial name="_PagingXLT" model="@pagingModel"/>
+
+<form asp-page="./Index" method="GET">
+    <div class="form-group">
+        <label>Search by title : </label>
+        <input name="SearchString" value="">
+        <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+</form>
+
+<p>
+    <a asp-page="Create">Create New</a>
+</p>
+<table class="table">
+    <thead>
+        <tr>
+            <th>STT</th>
+            <th>
+                @Html.DisplayNameFor(model => model.Article[0].Title)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.Article[0].Created)
+            </th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+@foreach (var item in Model.Article) {
+        <tr>
+            <td>@(++stt)</td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Title)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.Created)
+            </td>
+            <td>
+                <a asp-page="./Edit" asp-route-id="@item.ID">Edit</a> |
+                <a asp-page="./Details" asp-route-id="@item.ID">Details</a> |
+                <a asp-page="./Delete" asp-route-id="@item.ID">Delete</a>
+            </td>
+        </tr>
+}
+    </tbody>
+</table>
