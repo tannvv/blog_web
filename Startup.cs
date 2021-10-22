@@ -68,6 +68,13 @@ namespace blog_web
                 options.SignIn.RequireConfirmedPhoneNumber = false;     // Xác thực số điện thoại
 
             });
+            services.AddAuthentication()
+                .AddGoogle(options => {
+                    var gconfig = Configuration.GetSection("Authentication:Google");
+                    options.ClientId = gconfig["ClientId"];
+                    options.ClientSecret = gconfig["ClientSecret"];
+                    options.CallbackPath = "/dang-nhap-tu-google";
+                });
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

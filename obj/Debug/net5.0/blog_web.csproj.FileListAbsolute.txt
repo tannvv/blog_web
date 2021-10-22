@@ -211,3 +211,4 @@ E:\Project\VisualStudioCode\blog_web\obj\Debug\net5.0\Razor\Areas\Identity\Pages
 E:\Project\VisualStudioCode\blog_web\obj\Debug\net5.0\Razor\Areas\Identity\Pages\Error.cshtml.g.cs
 E:\Project\VisualStudioCode\blog_web\obj\Debug\net5.0\Razor\Areas\Identity\Pages\_ValidationScriptsPartial.cshtml.g.cs
 E:\Project\VisualStudioCode\blog_web\obj\Debug\net5.0\Razor\Areas\Identity\Pages\_ViewImports.cshtml.g.cs
+E:\Project\VisualStudioCode\blog_web\obj\Debug\net5.0\Razor\Areas\Identity\Pages\Account\Manage\_ViewStart.cshtml.g.cs

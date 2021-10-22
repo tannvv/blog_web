@@ -14,6 +14,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.Extensions.Logging;
+using Org.BouncyCastle.Ocsp;
 
 namespace blog_web.Areas.Identity.Pages.Account
 {
@@ -122,6 +123,75 @@ namespace blog_web.Areas.Identity.Pages.Account
 
             if (ModelState.IsValid)
             {
+                //lấy thông tin email trên form nhập 
+                AppUser registerUser = await _userManager.FindByEmailAsync(Input.Email);
+                // thông tin email trên google gửi về
+                string externalEmail = null;
+                // thông tin user đã tồn tại trên hệ thống với email được google gửi về
+                AppUser externalEmailUser = null;
+
+                // claim : dac tinh mo ta mot doi tuong   
+                // kiểm tra xem nếu thông tin trên google gửi về có email thì gán vào 
+                if (info.Principal.HasClaim(c=>c.Type == ClaimTypes.Email))
+                {
+                    externalEmail = info.Principal.FindFirstValue(ClaimTypes.Email);
+                }
+                // nếu thoogn tin trên google gửi về có email khác null thì tìm trên hệ thống
+                // user đã có quyền truy cập trên hệ thống bởi email đó
+                if (externalEmail != null)
+                {
+                    externalEmailUser = await _userManager.FindByEmailAsync(externalEmail);
+                }
+                if (registerUser != null && externalEmailUser != null)
+                {
+                    // externalEmail = Input.Email
+                    if (registerUser.Id == externalEmailUser.Id)
+                    {
+                        //liên kết tài khoản
+                        IdentityResult resultLink = await _userManager.AddLoginAsync(registerUser,info);
+                        if (resultLink.Succeeded)
+                        {
+                            //đăng nhập
+                            await _signInManager.SignInAsync(registerUser,isPersistent:false);
+                            return LocalRedirect(returnUrl);
+                        }
+                    }else{
+                        ModelState.AddModelError(string.Empty,"Không liên kết được tài khoản hãy sử dụng email khác");
+                        return Page();
+                    }
+                }
+                if (externalEmailUser != null && registerUser == null)
+                {
+                    ModelState.AddModelError(string.Empty,"Không hỗ trợ tạo tài khoản mới với email khác với email dịch vụ ngoài");
+                    return Page();
+                }
+                if (externalEmail == Input.Email && externalEmailUser == null)
+                {
+                    var newUser = new AppUser{
+                        UserName = externalEmail,
+                        Email = externalEmail
+                    };
+                    IdentityResult resultUser = await _userManager.CreateAsync(newUser);
+                    if (resultUser.Succeeded)
+                    {
+                        // liên kết new user với tài khoản ngoài
+                        await _userManager.AddLoginAsync(newUser,info);
+                        //xác thực địa chỉ email
+                        var code = await _userManager.GenerateEmailConfirmationTokenAsync(newUser);
+                        await _userManager.ConfirmEmailAsync(newUser,code);
+                        // ddnag nhap
+                        await _signInManager.SignInAsync(newUser,isPersistent:false);
+                        return LocalRedirect(returnUrl);
+                    }else{
+                        ModelState.AddModelError(string.Empty,"Không liên kết được tài khoản hãy sử dụng email khác");
+                        return Page();
+                    }
+                }
+                
+
+
+
+
                 var user = new AppUser { UserName = Input.Email, Email = Input.Email };
 
                 var result = await _userManager.CreateAsync(user);

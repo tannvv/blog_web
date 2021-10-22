@@ -1,15 +1,20 @@
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Linq;
 using System.Threading.Tasks;
 using blog_web;
+using Bogus.DataSets;
+using Bogus.Extensions;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 
 namespace blog_web.Areas.Identity.Pages.Account.Manage
 {
+    [Authorize]
     public partial class IndexModel : PageModel
     {
         private readonly UserManager<AppUser> _userManager;
@@ -36,6 +41,15 @@ namespace blog_web.Areas.Identity.Pages.Account.Manage
             [Phone]
             [Display(Name = "Phone number")]
             public string PhoneNumber { get; set; }
+
+            [DisplayName("Địa chỉ")]
+            [StringLength(400)]
+            public string HomeAddress { get; set; }
+
+            
+            [DisplayName("Ngày sinh")]
+            public DateTime? BirthDate { get; set; }
+
         }
 
         private async Task LoadAsync(AppUser user)
@@ -47,7 +61,9 @@ namespace blog_web.Areas.Identity.Pages.Account.Manage
 
             Input = new InputModel
             {
-                PhoneNumber = phoneNumber
+                PhoneNumber = phoneNumber,
+                HomeAddress = user.HomeAddress,
+                BirthDate = user.BirthDate
             };
         }
 
@@ -65,31 +81,36 @@ namespace blog_web.Areas.Identity.Pages.Account.Manage
 
         public async Task<IActionResult> OnPostAsync()
         {
-            var user = await _userManager.GetUserAsync(User);
-            if (user == null)
-            {
-                return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
-            }
+             var user = await _userManager.GetUserAsync(User);
+            // if (user == null)
+            // {
+            //     return NotFound($"Unable to load user with ID '{_userManager.GetUserId(User)}'.");
+            // }
 
-            if (!ModelState.IsValid)
-            {
-                await LoadAsync(user);
-                return Page();
-            }
+            // if (!ModelState.IsValid)
+            // {
+            //     await LoadAsync(user);
+            //     return Page();
+            // }
 
-            var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
-            if (Input.PhoneNumber != phoneNumber)
-            {
-                var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
-                if (!setPhoneResult.Succeeded)
-                {
-                    StatusMessage = "Unexpected error when trying to set phone number.";
-                    return RedirectToPage();
-                }
-            }
+            // var phoneNumber = await _userManager.GetPhoneNumberAsync(user);
+            // if (Input.PhoneNumber != phoneNumber)
+            // {
+            //     var setPhoneResult = await _userManager.SetPhoneNumberAsync(user, Input.PhoneNumber);
+            //     if (!setPhoneResult.Succeeded)
+            //     {
+            //         StatusMessage = "Unexpected error when trying to set phone number.";
+            //         return RedirectToPage();
+            //     }
+            // }
+            user.HomeAddress = Input.HomeAddress;
+            user.BirthDate = Input.BirthDate;
+            user.PhoneNumber = Input.PhoneNumber;
+
+            await _userManager.UpdateAsync(user);
 
             await _signInManager.RefreshSignInAsync(user);
-            StatusMessage = "Your profile has been updated";
+            StatusMessage = "Dữ liệu của bạn đã được cập nhật";
             return RedirectToPage();
         }
     }
